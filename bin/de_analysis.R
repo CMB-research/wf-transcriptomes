@@ -88,8 +88,11 @@ d <- dmFilter(d, min_samps_gene_expr = min_samps_gene_expr, min_samps_feature_ex
         min_gene_expr = min_gene_expr, min_feature_expr = min_feature_expr)
 
 cat("Building model matrix.\n")
-design <- model.matrix(~condition, data=DRIMSeq::samples(d))
-
+# check if ID is specified in sample_sheet, if so include in model matrix design
+# to get 'paired t-test'
+if("ID" %in% colnames(coldata))
+  design <- model.matrix(~ ID + condition, data = coldata) else
+    design <- model.matrix(~ condition, data = coldata)
 
 
 suppressMessages(library("dplyr"))
