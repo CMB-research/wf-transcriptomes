@@ -11,11 +11,13 @@ min_gene_expr <- as.numeric(args[4])
 min_feature_expr <- as.numeric(args[5])
 
 cat("Loading counts, conditions and parameters.\n")
-cts <- as.matrix(read.csv("all_counts.tsv", sep="\t", row.names="Reference", stringsAsFactors=FALSE))
+cts <- as.matrix(read.csv("UKHSA/de_transcript_counts.tsv", sep="\t",
+                          row.names="Reference", stringsAsFactors=FALSE))
 
 # Set up sample data frame:
 #changed this to sample_id
-coldata <- read.csv("sample_sheet.csv", row.names="alias", sep=",", stringsAsFactors=TRUE)
+coldata <- read.csv("UKHSA/sample_sheet.csv",
+                    row.names="alias", sep=",", stringsAsFactors=TRUE)
 
 coldata$sample_id <- rownames(coldata)
 # check if control condition exists, sets as reference 
@@ -91,8 +93,11 @@ cat("Building model matrix.\n")
 # check if ID is specified in sample_sheet, if so include in model matrix design
 # to get 'paired t-test'
 if("ID" %in% colnames(coldata))
-  design <- model.matrix(~ ID + condition, data = coldata) else
-    design <- model.matrix(~ condition, data = coldata)
+{
+  coldata$ID <- as.factor(coldata$ID)
+  design <- model.matrix(~ ID + condition, data = coldata)
+}else
+  design <- model.matrix(~ condition, data = coldata)
 
 
 suppressMessages(library("dplyr"))
