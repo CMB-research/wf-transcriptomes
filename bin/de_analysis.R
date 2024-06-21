@@ -11,13 +11,16 @@ min_gene_expr <- as.numeric(args[4])
 min_feature_expr <- as.numeric(args[5])
 
 cat("Loading counts, conditions and parameters.\n")
-cts <- as.matrix(read.csv("UKHSA/de_transcript_counts.tsv", sep="\t",
-                          row.names="Reference", stringsAsFactors=FALSE))
+cts <- as.matrix(read.csv("all_counts.tsv", sep="\t",
+                          row.names="Reference",
+                          stringsAsFactors=FALSE))
 
 # Set up sample data frame:
 #changed this to sample_id
-coldata <- read.csv("UKHSA/sample_sheet.csv",
-                    row.names="alias", sep=",", stringsAsFactors=TRUE)
+coldata <- read.csv("sample_sheet.csv",
+                    row.names="alias",
+                    sep=",", stringsAsFactors=TRUE)
+
 
 coldata$sample_id <- rownames(coldata)
 # check if control condition exists, sets as reference 
@@ -105,9 +108,11 @@ suppressMessages(library("dplyr"))
 # Sum transcript counts into gene counts:
 cat("Sum transcript counts into gene counts.\n")
 trs_cts <- counts(d)
-write.table(trs_cts, file="merged/filtered_transcript_counts_with_genes.tsv", sep="\t", row.names = FALSE, quote=FALSE)
+write.table(trs_cts, file="merged/filtered_transcript_counts_with_genes.tsv",
+            sep="\t", row.names = FALSE, quote=FALSE)
 
-gene_cts <- trs_cts_unfiltered %>% dplyr::select(c(1, 3:ncol(trs_cts)))  %>% group_by(gene_id) %>% summarise_all(tibble::lst(sum)) %>% data.frame()
+gene_cts <- trs_cts_unfiltered %>% dplyr::select(c(1, 3:ncol(trs_cts)))  %>%
+  group_by(gene_id) %>% summarise_all(tibble::lst(sum)) %>% data.frame()
 rownames(gene_cts) <- gene_cts$gene_id
 gene_cts$gene_id <- NULL
 write.table(gene_cts, file="merged/all_gene_counts.tsv", sep="\t", quote=FALSE)
@@ -143,7 +148,9 @@ cat("Running differential transcript usage analysis using DEXSeq.\n")
 
 sample.data<-DRIMSeq::samples(d)
 count.data <- round(as.matrix(counts(d)[,-c(1:2)]))
-dxd <- DEXSeqDataSet(countData=count.data, sampleData=sample.data, design=~sample + exon + condition:exon, featureID=trs_cts$feature_id, groupID=trs_cts$gene_id)
+dxd <- DEXSeqDataSet(countData=count.data, sampleData=sample.data,
+                     design=~sample + exon + condition:exon,
+                     featureID=trs_cts$feature_id, groupID=trs_cts$gene_id)
 dxd <- estimateSizeFactors(dxd)
 dxd <- estimateDispersions(dxd)
 dxd <- testForDEU(dxd, reducedModel=~sample + exon)
